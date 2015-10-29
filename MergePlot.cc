@@ -540,7 +540,7 @@ int main(){
         P_py = (P_p*sin(DegToRad*P_Theta)*sin(DegToRad*P_Phi));
         P_pz = (P_p*cos(DegToRad*P_Theta));
         
-        Em_p = pim_P + pcor.pcor(pim_Phi*DegToRad,8); //Momemtum corrected
+        Em_p = pim_P + pcor.pcor(pim_Phi*DegToRad,9); //Momemtum corrected
         Em_Theta = pim_Theta;
         Em_Phi = pim_Phi;
         Em_px = Em_p*sin(DegToRad*Em_Theta)*cos(DegToRad*Em_Phi);
@@ -548,7 +548,7 @@ int main(){
         Em_pz = Em_p*cos(DegToRad*Em_Theta);
         
         
-        Ep_p = pip_P + pcor.pcor(pip_Phi*DegToRad,9); //Momemtum corrected
+        Ep_p = pip_P + pcor.pcor(pip_Phi*DegToRad,8); //Momemtum corrected
         Ep_Theta = pip_Theta;
         Ep_Phi = pip_Phi;
         Ep_px = Ep_p*sin(DegToRad*Ep_Theta)*cos(DegToRad*Ep_Phi);
