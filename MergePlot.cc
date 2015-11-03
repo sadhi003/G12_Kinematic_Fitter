@@ -452,6 +452,18 @@ int main(){
   t4->Branch("Pull_Chi_nothingfit_diLep",&Pull_Chi_nothingfit_diLep,"Pull_Chi_nothingfit_diLep/D");
   t4->Branch("Pull_Prob_nothingfit_diLep",&Pull_Prob_nothingfit_diLep,"Pull_Prob_nothingfit_diLep/D");
   
+  Double_t Pull_Zero, Pull_One, Pull_Two, Pull_Three, Pull_Four, Pull_Five, Pull_Six, Pull_Seven, Pull_Eight, Pull_Nine;
+  t4->Branch("Pull_Zero",&Pull_Zero,"Pull_Zero/D");
+  t4->Branch("Pull_One",&Pull_One,"Pull_One/D");
+  t4->Branch("Pull_Two",&Pull_Two,"Pull_Two/D");
+  t4->Branch("Pull_Three",&Pull_Three,"Pull_Three/D");
+  t4->Branch("Pull_Four",&Pull_Four,"Pull_Four/D");
+  t4->Branch("Pull_Five",&Pull_Five,"Pull_Five/D");
+  t4->Branch("Pull_Six",&Pull_Six,"Pull_Six/D");
+  t4->Branch("Pull_Seven",&Pull_Seven,"Pull_Seven/D");
+  t4->Branch("Pull_Eight",&Pull_Eight,"Pull_Eight/D");
+  t4->Branch("Pull_Nine",&Pull_Nine,"Pull_Nine/D");
+  
   Double_t mE_PEpEm_nothingfit_diLep, mm2_PEpEm_nothingfit_diLep, mm_PEpEm_nothingfit_diLep, mm_P_nothingfit_diLep, mm2_P_nothingfit_diLep, Eg_nothingfit_diLep, IV_EpEm_nothingfit_diLep, IV_EpEm_nothingfit_diLep_P;
   
   t4->Branch("mE_PEpEm_nothingfit_diLep",&mE_PEpEm_nothingfit_diLep,"mE_PEpEm_nothingfit_diLep/D");
@@ -859,6 +871,17 @@ int main(){
         
         Pull_Chi_nothingfit_diLep = nothingfit_diLep.Chi2();
         Pull_Prob_nothingfit_diLep = nothingfit_diLep.Prob();
+        
+        Pull_Zero = nothingfit_diLep.GetPull(0);
+        Pull_One = nothingfit_diLep.GetPull(1);
+        Pull_Two = nothingfit_diLep.GetPull(2);
+        Pull_Three = nothingfit_diLep.GetPull(3);
+        Pull_Four = nothingfit_diLep.GetPull(4);
+        Pull_Five = nothingfit_diLep.GetPull(5);
+        Pull_Six = nothingfit_diLep.GetPull(6);
+        Pull_Seven = nothingfit_diLep.GetPull(7);
+        Pull_Eight = nothingfit_diLep.GetPull(8);
+        Pull_Nine = nothingfit_diLep.GetPull(9);
         
         Eg_nothingfit_diLep = nothingfit_diLep.FitPhotonEnergy();
         
