@@ -24,7 +24,7 @@
 #include "KinLine.C"
 #include "Kstream.C"
 
-#include"/Volumes/Mac_Storage/Work_Data/G12_NECCESSITIES/g12_corrections/g12_corrections/g12_corrections.hpp"
+#include"/Users/michaelkunkel/WORK/GIT_HUB/G12_Corrections/g12_corrections.hpp"
 
 
 using namespace std;
@@ -531,10 +531,10 @@ int main(){
     Pass_all = 0;
     
     if (NPip ==1 && NPim ==1 && NProt ==1) {
-//Lets Loop through each in-time photon
+      //Lets Loop through each in-time photon
       for (Int_t jphoton = 0; jphoton<N_in_timePhoton; jphoton++){
         
-//####################### Beam Corrections #######################
+        //####################### Beam Corrections #######################
         Double_t egam_chosen = in_photon_E[jphoton];
         
         Int_t run_input;
@@ -542,7 +542,7 @@ int main(){
         else if(run == 57314){run_input = 57315;}
         else{run_input = run;}
         double egam_chosen_corrected = clas::g12::corrected_beam_energy(run_input, egam_chosen);
-//####################### End Beam Corrections #######################
+        //####################### End Beam Corrections #######################
         
         
         P_p = prot_P + pcor.pcor(prot_Phi*DegToRad,14); //Momemtum corrected
@@ -575,365 +575,373 @@ int main(){
         V3ep.SetXYZ(pip_vx,pip_vy,pip_vz);
         V3em.SetXYZ(pim_vx,pim_vy,pim_vz);
         
-        //Lets start with fiducial and TOF cuts
+        TLorentzVector P4tot, P4mis;
         
-        trip_pass = clas::g12::is_good(run, event);
+        P4tot = P4pho + P4target;
+        P4mis = P4tot - ( P4pro + P4em + P4ep );
         
-        TVector3 pimUVW = clas::g12::g12_ECxyz_2uvw(pim_ECx, pim_ECy, pim_ECz);// EC UVW
-        TVector3 pipUVW = clas::g12::g12_ECxyz_2uvw(pip_ECx, pip_ECy, pip_ECz);// EC UVW
-        float pim_u = pimUVW.X();
-        float pim_v = pimUVW.Y();
-        float pim_w = pimUVW.Z();
-        float pip_u = pipUVW.X();
-        float pip_v = pipUVW.Y();
-        float pip_w = pipUVW.Z();
-        
-        Ep_EC_pass = clas::g12::pass_g12_ec_knockout(pip_ECin, pip_ECout, pip_u, pip_v, pip_w, pip_sec);// EC Knockout
-        Em_EC_pass = clas::g12::pass_g12_ec_knockout(pim_ECin, pim_ECout, pim_u, pim_v, pim_w, pim_sec);// EC Knockout
-        
-        Em_tofpass = clas::g12::pass_g12_TOFKO(pim_sec, pim_SC_paddle, 1);// TOF Knockout
-        Ep_tofpass = clas::g12::pass_g12_TOFKO(pip_sec, pip_SC_paddle, 1);// TOF Knockout
-        P_tofpass = clas::g12::pass_g12_TOFKO(prot_sec, prot_SC_paddle, 1);// TOF Knockout
-        
-        Ep_geofid = clas::g12::g12_PosParticle_fiducial_cuts(Em_p, Em_Theta, Em_Phi,"nominal");//Geometric Fiducial Cut
-        Em_geofid = clas::g12::g12_NegParticle_fiducial_cuts(Ep_p, Ep_Theta, Ep_Phi,"nominal");//Geometric Fiducial Cut
-        P_geofid = clas::g12::g12_PosParticle_fiducial_cuts(P_p, P_Theta, P_Phi,"nominal");//Geometric Fiducial Cut
-        
-        
-        if (Em_tofpass && Ep_tofpass && P_tofpass && Ep_EC_pass && Em_EC_pass && Ep_geofid && Em_geofid && P_geofid)
-        {
-          Good_events++;
-          Pass_all = 1;
+        if(abs((P4tot - ( P4em + P4ep )).M()-0.93828)< 0.055 && abs(P4mis.M())< 0.035){
           
-        }
-        else{
-          Bad_events++;
-          Pass_all = -1;
-        }
-        //End Fiducial and TOF cuts
-        
-        Run = run;
-        Event = event;
-        TrigBits = trigBits;
-        
-        P_sec = prot_sec;
-        Ep_sec = pip_sec;
-        Em_sec = pip_sec;
-        
-        
-        P_dTOF = prot_dTOF;
-        Timing_P = Timing_prot;
-        P_Tprop = prot_Tprop;
-        
-        
-        Ep_dTOF = pip_dTOF;
-        Timing_Ep = Timing_pip;
-        Ep_Tprop = pip_Tprop;
-        
-        
-        Em_dTOF = pim_dTOF;
-        Timing_Em = Timing_pim;
-        Em_Tprop = pim_Tprop;
-        
-        
-        mE_PEpEm = (double)MEPEpEm; mm2_PEpEm = (double)MM2PEpEm;
-        mm2_P = (double)MM2P; E_g = (double)egam_chosen_corrected; IV_EpEm = (double)IVEpEm;
-        Vx = (double)vx; Vy = (double)vy; Vz = (double)vz;
-        
-        
-        open_angle = P4ep.Vect().Angle(P4em.Vect());
-        TLorentzVector IV_EpEmVec_nofit = P4em + P4ep;
-        IV_EpEm_P= sqrt(pow(IV_EpEmVec_nofit.Px(),2) + pow(IV_EpEmVec_nofit.Py(),2) + pow(IV_EpEmVec_nofit.Pz(),2));
-        
-        CM_Theta = OneBoostComparison((P4pho + P4target - P4pro), (P4pho + P4target));
-        mandelstam_t = (P4target - P4pro).M2();
-        
-        
-        TMatrixD covTrack(10,10);
-        Double_t c00 = pow((0.001*5.715),2)/3;
-        covTrack(0,0)=c00;
-        covTrack(1,1)= prot_mat[0][0]*pow(P_p,4);
-        covTrack(1,2)=-prot_mat[0][1]*pow(P_p,2);
-        covTrack(1,3)= -prot_mat[0][2]*pow(P_p,2);
-        covTrack(2,1)= -prot_mat[0][1]*pow(P_p,2);
-        covTrack(2,2)= prot_mat[1][1];
-        covTrack(2,3)=prot_mat[1][2];
-        covTrack(3,1)= -prot_mat[0][2]*pow(P_p,2);
-        covTrack(3,2)= prot_mat[1][2];
-        covTrack(3,3)=prot_mat[2][2];
-        
-        covTrack(4,4)= pip_mat[0][0]*pow(Ep_p,4);
-        covTrack(4,5)= -pip_mat[0][1]*pow(Ep_p,2);
-        covTrack(4,6)= -pip_mat[0][2]*pow(Ep_p,2);
-        covTrack(5,4)= -pip_mat[0][1]*pow(Ep_p,2);
-        covTrack(5,5)= pip_mat[1][1];
-        covTrack(5,6)= pip_mat[1][2];
-        covTrack(6,4)= -pip_mat[0][2]*pow(Ep_p,2);
-        covTrack(6,5)= pip_mat[1][2];
-        covTrack(6,6)= pip_mat[2][2];
-        
-        covTrack(7,7)= pim_mat[0][0]*pow(Em_p,4);
-        covTrack(7,8)= pim_mat[0][1]*pow(Em_p,2);
-        covTrack(7,9)= pim_mat[0][2]*pow(Em_p,2);
-        covTrack(8,7)= pim_mat[0][1]*pow(Em_p,2);
-        covTrack(8,8)= pim_mat[1][1];
-        covTrack(8,9)= pim_mat[1][2];
-        covTrack(9,7)= pim_mat[0][2]*pow(Em_p,2);
-        covTrack(9,8)= pim_mat[1][2];
-        covTrack(9,9)= pim_mat[2][2];
-        
-        const int num_parts = 3;
-        
-        std::vector<TLorentzVector> p4(num_parts);
-        std::vector<TLorentzVector> ptest(num_parts);
-        std::vector<TLorentzVector> p4pi0(num_parts);
-        std::vector<TLorentzVector> p4nothing(num_parts);
-        
-        
-        std::vector<TVector3> vert(num_parts);
-        std::vector<string> particles(num_parts);
-        
-        bool multi = false;
-        bool is_mc = false;
-        
-        std::vector<bool> set(num_parts);
-        std::vector<bool> settest(num_parts);
-        
-        set[0] = false;     settest[0] = false;
-        set[1] = false;     settest[1] = true;
-        set[2] = false;     settest[2] = true;
-        
-        Double_t m_targ = 0.93828;
-        Double_t e_gamma = egam_chosen_corrected;
-        
-        p4[0] = P4pro; ptest[0] = P4pro;  p4pi0[0] = P4pro; p4nothing[0] = P4pro;
-        p4[1] = P4ep;  ptest[1] = P4ep;   p4pi0[1] = P4ep;  p4nothing[1] = P4ep;
-        p4[2] = P4em;  ptest[2] = P4em;   p4pi0[2] = P4em;  p4nothing[2] = P4em;
-        
-        
-        vert[0] = V3pro;
-        vert[1] = V3ep;
-        vert[2] = V3em;
-        
-        particles[0] = "p";
-        particles[1] = "e+";
-        particles[2] = "e-";
-        
-        string experiment = "g12";
-        
-        //This is an example of a 2-C fit
-        TMatrixD covtestMatrix(10,10);
-        
-        covtestMatrix = CorrectCLAS_V(covTrack,particles,ptest,vert,multi,is_mc,experiment);
-        Kstream testfit;
-        testfit.StringNames(particles);
-        testfit.FitInput(e_gamma,ptest,covtestMatrix,m_targ);
-        bool include = true; //Include missing particle in constraint no (false).
-        
-        testfit.Fit("gamma",settest,include,M_Eta);
-        
-        
-        test_Pull_Chi = testfit.Chi2();
-        test_Pull_Prob = testfit.Prob();
-        
-        //For e+e-(gamma) fitting
-        TMatrixD covMatrix(10,10);
-        
-        covMatrix = CorrectCLAS_V(covTrack,particles,p4,vert,multi,is_mc,experiment);
-        Kstream gamfit_diLep;
-        gamfit_diLep.StringNames(particles);
-        gamfit_diLep.FitInput(e_gamma,p4,covMatrix,m_targ);
-        gamfit_diLep.Fit("gamma");
-        
-        Pull_Chi_gamfit_diLep = gamfit_diLep.Chi2();
-        Pull_Prob_gamfit_diLep = gamfit_diLep.Prob();
-        
-        Eg_gamfit_diLep = gamfit_diLep.FitPhotonEnergy();
-        
-        for(int i = 0; i < 3; i++) p4[i] = gamfit_diLep.FitP4(i);
-        
-        P4pho_gamfit_diLep.SetPxPyPzE(0.0,0.0,Eg_gamfit_diLep,Eg_gamfit_diLep);
-        P4pro_gamfit_diLep = p4[0];
-        P4ep_gamfit_diLep = p4[1];
-        P4em_gamfit_diLep = p4[2];
-        
-        TLorentzVector MM_PVec = (P4pho_gamfit_diLep + P4target) - P4pro_gamfit_diLep;
-        TLorentzVector MM_PEpEmVec = (P4pho_gamfit_diLep + P4target) - (P4pro_gamfit_diLep + P4ep_gamfit_diLep + P4em_gamfit_diLep);
-        TLorentzVector IV_EpEmVec = P4ep_gamfit_diLep + P4em_gamfit_diLep;
-        open_angle_gamfit_diLep = P4ep_gamfit_diLep.Vect().Angle(P4em_gamfit_diLep.Vect());
-        IV_EpEm_gamfit_diLep_P = sqrt(pow(IV_EpEmVec.Px(),2) + pow(IV_EpEmVec.Py(),2) + pow(IV_EpEmVec.Pz(),2));
-        
-        CM_Theta_gamfit_diLep = OneBoostComparison(MM_PVec, (P4pho_gamfit_diLep + P4target));
-        mandelstam_t_gamfit_diLep = (P4target - P4pro_gamfit_diLep).M2();
-        
-        
-        mE_PEpEm_gamfit_diLep = MM_PEpEmVec.E();
-        mm2_PEpEm_gamfit_diLep = MM_PEpEmVec.M2();
-        mm_PEpEm_gamfit_diLep = MM_PEpEmVec.M();
-        
-        mm_P_gamfit_diLep = MM_PVec.M();
-        mm2_P_gamfit_diLep = MM_PVec.M2();
-        IV_EpEm_gamfit_diLep = IV_EpEmVec.M();
-        
-        P_px_gamfit_diLep = P4pro_gamfit_diLep.Px();
-        P_py_gamfit_diLep = P4pro_gamfit_diLep.Py();
-        P_pz_gamfit_diLep = P4pro_gamfit_diLep.Pz();
-        P_Theta_gamfit_diLep = P4pro_gamfit_diLep.Theta()*180./TMath::Pi();
-        P_Phi_gamfit_diLep = P4pro_gamfit_diLep.Phi()*180./TMath::Pi();
-        
-        Ep_px_gamfit_diLep = P4ep_gamfit_diLep.Px();
-        Ep_py_gamfit_diLep = P4ep_gamfit_diLep.Py();
-        Ep_pz_gamfit_diLep = P4ep_gamfit_diLep.Pz();
-        Ep_Theta_gamfit_diLep = P4ep_gamfit_diLep.Theta()*180./TMath::Pi();
-        Ep_Phi_gamfit_diLep = P4ep_gamfit_diLep.Phi()*180./TMath::Pi();
-        
-        Em_px_gamfit_diLep = P4em_gamfit_diLep.Px();
-        Em_py_gamfit_diLep = P4em_gamfit_diLep.Py();
-        Em_pz_gamfit_diLep = P4em_gamfit_diLep.Pz();
-        Em_Theta_gamfit_diLep = P4em_gamfit_diLep.Theta()*180./TMath::Pi();
-        Em_Phi_gamfit_diLep = P4em_gamfit_diLep.Phi()*180./TMath::Pi();
-        
-        P_Ptot_gamfit_diLep = sqrt(pow(P_px_gamfit_diLep,2) + pow(P_py_gamfit_diLep,2) + pow(P_pz_gamfit_diLep,2));
-        Ep_Ptot_gamfit_diLep = sqrt(pow(Ep_px_gamfit_diLep,2) + pow(Ep_py_gamfit_diLep,2) + pow(Ep_pz_gamfit_diLep,2));
-        Em_Ptot_gamfit_diLep = sqrt(pow(Em_px_gamfit_diLep,2) + pow(Em_py_gamfit_diLep,2) + pow(Em_pz_gamfit_diLep,2));
-        
-        //For e+e-(pi0) fitting
-        TMatrixD covMatrixpi0(10,10);
-        
-        covMatrixpi0 = CorrectCLAS_V(covTrack,particles,p4pi0,vert,multi,is_mc,experiment);
-        Kstream pi0fit_diLep;
-        pi0fit_diLep.StringNames(particles);
-        pi0fit_diLep.FitInput(e_gamma,p4pi0,covMatrixpi0,m_targ);
-        pi0fit_diLep.Fit("pi0");
-        
-        
-        Pull_Chi_pi0fit_diLep = pi0fit_diLep.Chi2();
-        Pull_Prob_pi0fit_diLep = pi0fit_diLep.Prob();
-        
-        Eg_pi0fit_diLep = pi0fit_diLep.FitPhotonEnergy();
-        
-        for(int i = 0; i < 3; i++) p4pi0[i] = pi0fit_diLep.FitP4(i);
-        
-        P4pho_pi0fit_diLep.SetPxPyPzE(0.0,0.0,Eg_pi0fit_diLep,Eg_pi0fit_diLep);
-        P4pro_pi0fit_diLep = p4pi0[0];
-        P4ep_pi0fit_diLep = p4pi0[1];
-        P4em_pi0fit_diLep = p4pi0[2];
-        
-        TLorentzVector MM_PVec_pi0fit_diLep = (P4pho_pi0fit_diLep + P4target) - P4pro_pi0fit_diLep;
-        TLorentzVector MM_PEpEmVec_pi0fit_diLep = (P4pho_pi0fit_diLep + P4target) - (P4pro_pi0fit_diLep + P4ep_pi0fit_diLep + P4em_pi0fit_diLep);
-        TLorentzVector IV_EpEmVec_pi0fit_diLep = P4ep_pi0fit_diLep + P4em_pi0fit_diLep;
-        open_angle_pi0fit_diLep = P4ep_pi0fit_diLep.Vect().Angle(P4em_pi0fit_diLep.Vect());
-        IV_EpEm_pi0fit_diLep_P = sqrt(pow(IV_EpEmVec_pi0fit_diLep.Px(),2) + pow(IV_EpEmVec_pi0fit_diLep.Py(),2) + pow(IV_EpEmVec_pi0fit_diLep.Pz(),2));
-        
-        CM_Theta_pi0fit_diLep = OneBoostComparison(MM_PVec_pi0fit_diLep, (P4pho_pi0fit_diLep + P4target));
-        mandelstam_t_pi0fit_diLep = (P4target - P4pro_pi0fit_diLep).M2();
-        
-        
-        mE_PEpEm_pi0fit_diLep = MM_PEpEmVec_pi0fit_diLep.E();
-        mm2_PEpEm_pi0fit_diLep = MM_PEpEmVec_pi0fit_diLep.M2();
-        mm_PEpEm_pi0fit_diLep = MM_PEpEmVec_pi0fit_diLep.M();
-        
-        mm_P_pi0fit_diLep = MM_PVec_pi0fit_diLep.M();
-        mm2_P_pi0fit_diLep = MM_PVec_pi0fit_diLep.M2();
-        IV_EpEm_pi0fit_diLep = IV_EpEmVec_pi0fit_diLep.M();
-        
-        P_px_pi0fit_diLep = P4pro_pi0fit_diLep.Px();
-        P_py_pi0fit_diLep = P4pro_pi0fit_diLep.Py();
-        P_pz_pi0fit_diLep = P4pro_pi0fit_diLep.Pz();
-        P_Theta_pi0fit_diLep = P4pro_pi0fit_diLep.Theta()*180./TMath::Pi();
-        P_Phi_pi0fit_diLep = P4pro_pi0fit_diLep.Phi()*180./TMath::Pi();
-        
-        Ep_px_pi0fit_diLep = P4ep_pi0fit_diLep.Px();
-        Ep_py_pi0fit_diLep = P4ep_pi0fit_diLep.Py();
-        Ep_pz_pi0fit_diLep = P4ep_pi0fit_diLep.Pz();
-        Ep_Theta_pi0fit_diLep = P4ep_pi0fit_diLep.Theta()*180./TMath::Pi();
-        Ep_Phi_pi0fit_diLep = P4ep_pi0fit_diLep.Phi()*180./TMath::Pi();
-        
-        Em_px_pi0fit_diLep = P4em_pi0fit_diLep.Px();
-        Em_py_pi0fit_diLep = P4em_pi0fit_diLep.Py();
-        Em_pz_pi0fit_diLep = P4em_pi0fit_diLep.Pz();
-        Em_Theta_pi0fit_diLep = P4em_pi0fit_diLep.Theta()*180./TMath::Pi();
-        Em_Phi_pi0fit_diLep = P4em_pi0fit_diLep.Phi()*180./TMath::Pi();
-        
-        P_Ptot_pi0fit_diLep = sqrt(pow(P_px_pi0fit_diLep,2) + pow(P_py_pi0fit_diLep,2) + pow(P_pz_pi0fit_diLep,2));
-        Ep_Ptot_pi0fit_diLep = sqrt(pow(Ep_px_pi0fit_diLep,2) + pow(Ep_py_pi0fit_diLep,2) + pow(Ep_pz_pi0fit_diLep,2));
-        Em_Ptot_pi0fit_diLep = sqrt(pow(Em_px_pi0fit_diLep,2) + pow(Em_py_pi0fit_diLep,2) + pow(Em_pz_pi0fit_diLep,2));
-        
-        //For e+e-(0) fitting
-        TMatrixD covMatrixnothing(10,10);
-        
-        covMatrixnothing = CorrectCLAS_V(covTrack,particles,p4nothing,vert,multi,is_mc,experiment);
-        Kstream nothingfit_diLep;
-        nothingfit_diLep.StringNames(particles);
-        nothingfit_diLep.FitInput(e_gamma,p4nothing,covMatrixnothing,m_targ);
-        nothingfit_diLep.Fit();
-        
-        
-        Pull_Chi_nothingfit_diLep = nothingfit_diLep.Chi2();
-        Pull_Prob_nothingfit_diLep = nothingfit_diLep.Prob();
-        
-        Pull_Zero = nothingfit_diLep.GetPull(0);
-        Pull_One = nothingfit_diLep.GetPull(1);
-        Pull_Two = nothingfit_diLep.GetPull(2);
-        Pull_Three = nothingfit_diLep.GetPull(3);
-        Pull_Four = nothingfit_diLep.GetPull(4);
-        Pull_Five = nothingfit_diLep.GetPull(5);
-        Pull_Six = nothingfit_diLep.GetPull(6);
-        Pull_Seven = nothingfit_diLep.GetPull(7);
-        Pull_Eight = nothingfit_diLep.GetPull(8);
-        Pull_Nine = nothingfit_diLep.GetPull(9);
-        
-        Eg_nothingfit_diLep = nothingfit_diLep.FitPhotonEnergy();
-        
-        for(int i = 0; i < 3; i++) p4nothing[i] = nothingfit_diLep.FitP4(i);
-        
-        P4pho_nothingfit_diLep.SetPxPyPzE(0.0,0.0,Eg_nothingfit_diLep,Eg_nothingfit_diLep);
-        P4pro_nothingfit_diLep = p4nothing[0];
-        P4ep_nothingfit_diLep = p4nothing[1];
-        P4em_nothingfit_diLep = p4nothing[2];
-        
-        TLorentzVector MM_PVec_nothingfit_diLep = (P4pho_nothingfit_diLep + P4target) - P4pro_nothingfit_diLep;
-        TLorentzVector MM_PEpEmVec_nothingfit_diLep = (P4pho_nothingfit_diLep + P4target) - (P4pro_nothingfit_diLep + P4ep_nothingfit_diLep + P4em_nothingfit_diLep);
-        TLorentzVector IV_EpEmVec_nothingfit_diLep = P4ep_nothingfit_diLep + P4em_nothingfit_diLep;
-        open_angle_nothingfit_diLep = P4ep_nothingfit_diLep.Vect().Angle(P4em_nothingfit_diLep.Vect());
-        IV_EpEm_nothingfit_diLep_P = sqrt(pow(IV_EpEmVec_nothingfit_diLep.Px(),2) + pow(IV_EpEmVec_nothingfit_diLep.Py(),2) + pow(IV_EpEmVec_nothingfit_diLep.Pz(),2));
-        
-        CM_Theta_nothingfit_diLep = OneBoostComparison(MM_PVec_nothingfit_diLep, (P4pho_nothingfit_diLep + P4target));
-        mandelstam_t_nothingfit_diLep = (P4target - P4pro_nothingfit_diLep).M2();
-        
-        
-        mE_PEpEm_nothingfit_diLep = MM_PEpEmVec_nothingfit_diLep.E();
-        mm2_PEpEm_nothingfit_diLep = MM_PEpEmVec_nothingfit_diLep.M2();
-        mm_PEpEm_nothingfit_diLep = MM_PEpEmVec_nothingfit_diLep.M();
-        
-        mm_P_nothingfit_diLep = MM_PVec_nothingfit_diLep.M();
-        mm2_P_nothingfit_diLep = MM_PVec_nothingfit_diLep.M2();
-        IV_EpEm_nothingfit_diLep = IV_EpEmVec_nothingfit_diLep.M();
-        
-        P_px_nothingfit_diLep = P4pro_nothingfit_diLep.Px();
-        P_py_nothingfit_diLep = P4pro_nothingfit_diLep.Py();
-        P_pz_nothingfit_diLep = P4pro_nothingfit_diLep.Pz();
-        P_Theta_nothingfit_diLep = P4pro_nothingfit_diLep.Theta()*180./TMath::Pi();
-        P_Phi_nothingfit_diLep = P4pro_nothingfit_diLep.Phi()*180./TMath::Pi();
-        
-        Ep_px_nothingfit_diLep = P4ep_nothingfit_diLep.Px();
-        Ep_py_nothingfit_diLep = P4ep_nothingfit_diLep.Py();
-        Ep_pz_nothingfit_diLep = P4ep_nothingfit_diLep.Pz();
-        Ep_Theta_nothingfit_diLep = P4ep_nothingfit_diLep.Theta()*180./TMath::Pi();
-        Ep_Phi_nothingfit_diLep = P4ep_nothingfit_diLep.Phi()*180./TMath::Pi();
-        
-        Em_px_nothingfit_diLep = P4em_nothingfit_diLep.Px();
-        Em_py_nothingfit_diLep = P4em_nothingfit_diLep.Py();
-        Em_pz_nothingfit_diLep = P4em_nothingfit_diLep.Pz();
-        Em_Theta_nothingfit_diLep = P4em_nothingfit_diLep.Theta()*180./TMath::Pi();
-        Em_Phi_nothingfit_diLep = P4em_nothingfit_diLep.Phi()*180./TMath::Pi();
-        
-        P_Ptot_nothingfit_diLep = sqrt(pow(P_px_nothingfit_diLep,2) + pow(P_py_nothingfit_diLep,2) + pow(P_pz_nothingfit_diLep,2));
-        Ep_Ptot_nothingfit_diLep = sqrt(pow(Ep_px_nothingfit_diLep,2) + pow(Ep_py_nothingfit_diLep,2) + pow(Ep_pz_nothingfit_diLep,2));
-        Em_Ptot_nothingfit_diLep = sqrt(pow(Em_px_nothingfit_diLep,2) + pow(Em_py_nothingfit_diLep,2) + pow(Em_pz_nothingfit_diLep,2));
-        
-        
-        t4->Fill();
+          //Lets start with fiducial and TOF cuts
+          
+          trip_pass = clas::g12::is_good(run, event);
+          
+          TVector3 pimUVW = clas::g12::g12_ECxyz_2uvw(pim_ECx, pim_ECy, pim_ECz);// EC UVW
+          TVector3 pipUVW = clas::g12::g12_ECxyz_2uvw(pip_ECx, pip_ECy, pip_ECz);// EC UVW
+          float pim_u = pimUVW.X();
+          float pim_v = pimUVW.Y();
+          float pim_w = pimUVW.Z();
+          float pip_u = pipUVW.X();
+          float pip_v = pipUVW.Y();
+          float pip_w = pipUVW.Z();
+          
+          Ep_EC_pass = clas::g12::pass_g12_ec_knockout(pip_ECin, pip_ECout, pip_u, pip_v, pip_w, pip_sec);// EC Knockout
+          Em_EC_pass = clas::g12::pass_g12_ec_knockout(pim_ECin, pim_ECout, pim_u, pim_v, pim_w, pim_sec);// EC Knockout
+          
+          Em_tofpass = clas::g12::pass_g12_TOFKO(pim_sec, pim_SC_paddle, 1);// TOF Knockout
+          Ep_tofpass = clas::g12::pass_g12_TOFKO(pip_sec, pip_SC_paddle, 1);// TOF Knockout
+          P_tofpass = clas::g12::pass_g12_TOFKO(prot_sec, prot_SC_paddle, 1);// TOF Knockout
+          
+          Ep_geofid = clas::g12::g12_PosParticle_fiducial_cuts(Em_p, Em_Theta, Em_Phi,"nominal");//Geometric Fiducial Cut
+          Em_geofid = clas::g12::g12_NegParticle_fiducial_cuts(Ep_p, Ep_Theta, Ep_Phi,"nominal");//Geometric Fiducial Cut
+          P_geofid = clas::g12::g12_PosParticle_fiducial_cuts(P_p, P_Theta, P_Phi,"nominal");//Geometric Fiducial Cut
+          
+          
+          if (Em_tofpass && Ep_tofpass && P_tofpass && Ep_EC_pass && Em_EC_pass && Ep_geofid && Em_geofid && P_geofid)
+          {
+            Good_events++;
+            Pass_all = 1;
+            
+          }
+          else{
+            Bad_events++;
+            Pass_all = -1;
+          }
+          //End Fiducial and TOF cuts
+          
+          Run = run;
+          Event = event;
+          TrigBits = trigBits;
+          
+          P_sec = prot_sec;
+          Ep_sec = pip_sec;
+          Em_sec = pip_sec;
+          
+          
+          P_dTOF = prot_dTOF;
+          Timing_P = Timing_prot;
+          P_Tprop = prot_Tprop;
+          
+          
+          Ep_dTOF = pip_dTOF;
+          Timing_Ep = Timing_pip;
+          Ep_Tprop = pip_Tprop;
+          
+          
+          Em_dTOF = pim_dTOF;
+          Timing_Em = Timing_pim;
+          Em_Tprop = pim_Tprop;
+          
+          
+          mE_PEpEm = (double)MEPEpEm; mm2_PEpEm = (double)MM2PEpEm;
+          mm2_P = (double)MM2P; E_g = (double)egam_chosen_corrected; IV_EpEm = (double)IVEpEm;
+          Vx = (double)vx; Vy = (double)vy; Vz = (double)vz;
+          
+          
+          open_angle = P4ep.Vect().Angle(P4em.Vect());
+          TLorentzVector IV_EpEmVec_nofit = P4em + P4ep;
+          IV_EpEm_P= sqrt(pow(IV_EpEmVec_nofit.Px(),2) + pow(IV_EpEmVec_nofit.Py(),2) + pow(IV_EpEmVec_nofit.Pz(),2));
+          
+          CM_Theta = OneBoostComparison((P4pho + P4target - P4pro), (P4pho + P4target));
+          mandelstam_t = (P4target - P4pro).M2();
+          
+          
+          TMatrixD covTrack(10,10);
+          Double_t c00 = pow((0.001*5.715),2)/3;
+          covTrack(0,0)=c00;
+          covTrack(1,1)= prot_mat[0][0]*pow(P_p,4);
+          covTrack(1,2)=-prot_mat[0][1]*pow(P_p,2);
+          covTrack(1,3)= -prot_mat[0][2]*pow(P_p,2);
+          covTrack(2,1)= -prot_mat[0][1]*pow(P_p,2);
+          covTrack(2,2)= prot_mat[1][1];
+          covTrack(2,3)=prot_mat[1][2];
+          covTrack(3,1)= -prot_mat[0][2]*pow(P_p,2);
+          covTrack(3,2)= prot_mat[1][2];
+          covTrack(3,3)=prot_mat[2][2];
+          
+          covTrack(4,4)= pip_mat[0][0]*pow(Ep_p,4);
+          covTrack(4,5)= -pip_mat[0][1]*pow(Ep_p,2);
+          covTrack(4,6)= -pip_mat[0][2]*pow(Ep_p,2);
+          covTrack(5,4)= -pip_mat[0][1]*pow(Ep_p,2);
+          covTrack(5,5)= pip_mat[1][1];
+          covTrack(5,6)= pip_mat[1][2];
+          covTrack(6,4)= -pip_mat[0][2]*pow(Ep_p,2);
+          covTrack(6,5)= pip_mat[1][2];
+          covTrack(6,6)= pip_mat[2][2];
+          
+          covTrack(7,7)= pim_mat[0][0]*pow(Em_p,4);
+          covTrack(7,8)= pim_mat[0][1]*pow(Em_p,2);
+          covTrack(7,9)= pim_mat[0][2]*pow(Em_p,2);
+          covTrack(8,7)= pim_mat[0][1]*pow(Em_p,2);
+          covTrack(8,8)= pim_mat[1][1];
+          covTrack(8,9)= pim_mat[1][2];
+          covTrack(9,7)= pim_mat[0][2]*pow(Em_p,2);
+          covTrack(9,8)= pim_mat[1][2];
+          covTrack(9,9)= pim_mat[2][2];
+          
+          const int num_parts = 3;
+          
+          std::vector<TLorentzVector> p4(num_parts);
+          std::vector<TLorentzVector> ptest(num_parts);
+          std::vector<TLorentzVector> p4pi0(num_parts);
+          std::vector<TLorentzVector> p4nothing(num_parts);
+          
+          
+          std::vector<TVector3> vert(num_parts);
+          std::vector<string> particles(num_parts);
+          
+          bool multi = false;
+          bool is_mc = false;
+          
+          std::vector<bool> set(num_parts);
+          std::vector<bool> settest(num_parts);
+          
+          set[0] = false;     settest[0] = false;
+          set[1] = false;     settest[1] = true;
+          set[2] = false;     settest[2] = true;
+          
+          Double_t m_targ = 0.93828;
+          Double_t e_gamma = egam_chosen_corrected;
+          
+          p4[0] = P4pro; ptest[0] = P4pro;  p4pi0[0] = P4pro; p4nothing[0] = P4pro;
+          p4[1] = P4ep;  ptest[1] = P4ep;   p4pi0[1] = P4ep;  p4nothing[1] = P4ep;
+          p4[2] = P4em;  ptest[2] = P4em;   p4pi0[2] = P4em;  p4nothing[2] = P4em;
+          
+          
+          vert[0] = V3pro;
+          vert[1] = V3ep;
+          vert[2] = V3em;
+          
+          particles[0] = "p";
+          particles[1] = "e+";
+          particles[2] = "e-";
+          
+          string experiment = "g12";
+          
+          //This is an example of a 2-C fit
+          TMatrixD covtestMatrix(10,10);
+          
+          covtestMatrix = CorrectCLAS_V(covTrack,particles,ptest,vert,multi,is_mc,experiment);
+          Kstream testfit;
+          testfit.StringNames(particles);
+          testfit.FitInput(e_gamma,ptest,covtestMatrix,m_targ);
+          bool include = true; //Include missing particle in constraint no (false).
+          
+          testfit.Fit("gamma",settest,include,M_Eta);
+          
+          
+          test_Pull_Chi = testfit.Chi2();
+          test_Pull_Prob = testfit.Prob();
+          
+          //For e+e-(gamma) fitting
+          TMatrixD covMatrix(10,10);
+          
+          covMatrix = CorrectCLAS_V(covTrack,particles,p4,vert,multi,is_mc,experiment);
+          Kstream gamfit_diLep;
+          gamfit_diLep.StringNames(particles);
+          gamfit_diLep.FitInput(e_gamma,p4,covMatrix,m_targ);
+          gamfit_diLep.Fit("gamma");
+          
+          Pull_Chi_gamfit_diLep = gamfit_diLep.Chi2();
+          Pull_Prob_gamfit_diLep = gamfit_diLep.Prob();
+          
+          Eg_gamfit_diLep = gamfit_diLep.FitPhotonEnergy();
+          
+          for(int i = 0; i < 3; i++) p4[i] = gamfit_diLep.FitP4(i);
+          
+          P4pho_gamfit_diLep.SetPxPyPzE(0.0,0.0,Eg_gamfit_diLep,Eg_gamfit_diLep);
+          P4pro_gamfit_diLep = p4[0];
+          P4ep_gamfit_diLep = p4[1];
+          P4em_gamfit_diLep = p4[2];
+          
+          TLorentzVector MM_PVec = (P4pho_gamfit_diLep + P4target) - P4pro_gamfit_diLep;
+          TLorentzVector MM_PEpEmVec = (P4pho_gamfit_diLep + P4target) - (P4pro_gamfit_diLep + P4ep_gamfit_diLep + P4em_gamfit_diLep);
+          TLorentzVector IV_EpEmVec = P4ep_gamfit_diLep + P4em_gamfit_diLep;
+          open_angle_gamfit_diLep = P4ep_gamfit_diLep.Vect().Angle(P4em_gamfit_diLep.Vect());
+          IV_EpEm_gamfit_diLep_P = sqrt(pow(IV_EpEmVec.Px(),2) + pow(IV_EpEmVec.Py(),2) + pow(IV_EpEmVec.Pz(),2));
+          
+          CM_Theta_gamfit_diLep = OneBoostComparison(MM_PVec, (P4pho_gamfit_diLep + P4target));
+          mandelstam_t_gamfit_diLep = (P4target - P4pro_gamfit_diLep).M2();
+          
+          
+          mE_PEpEm_gamfit_diLep = MM_PEpEmVec.E();
+          mm2_PEpEm_gamfit_diLep = MM_PEpEmVec.M2();
+          mm_PEpEm_gamfit_diLep = MM_PEpEmVec.M();
+          
+          mm_P_gamfit_diLep = MM_PVec.M();
+          mm2_P_gamfit_diLep = MM_PVec.M2();
+          IV_EpEm_gamfit_diLep = IV_EpEmVec.M();
+          
+          P_px_gamfit_diLep = P4pro_gamfit_diLep.Px();
+          P_py_gamfit_diLep = P4pro_gamfit_diLep.Py();
+          P_pz_gamfit_diLep = P4pro_gamfit_diLep.Pz();
+          P_Theta_gamfit_diLep = P4pro_gamfit_diLep.Theta()*180./TMath::Pi();
+          P_Phi_gamfit_diLep = P4pro_gamfit_diLep.Phi()*180./TMath::Pi();
+          
+          Ep_px_gamfit_diLep = P4ep_gamfit_diLep.Px();
+          Ep_py_gamfit_diLep = P4ep_gamfit_diLep.Py();
+          Ep_pz_gamfit_diLep = P4ep_gamfit_diLep.Pz();
+          Ep_Theta_gamfit_diLep = P4ep_gamfit_diLep.Theta()*180./TMath::Pi();
+          Ep_Phi_gamfit_diLep = P4ep_gamfit_diLep.Phi()*180./TMath::Pi();
+          
+          Em_px_gamfit_diLep = P4em_gamfit_diLep.Px();
+          Em_py_gamfit_diLep = P4em_gamfit_diLep.Py();
+          Em_pz_gamfit_diLep = P4em_gamfit_diLep.Pz();
+          Em_Theta_gamfit_diLep = P4em_gamfit_diLep.Theta()*180./TMath::Pi();
+          Em_Phi_gamfit_diLep = P4em_gamfit_diLep.Phi()*180./TMath::Pi();
+          
+          P_Ptot_gamfit_diLep = sqrt(pow(P_px_gamfit_diLep,2) + pow(P_py_gamfit_diLep,2) + pow(P_pz_gamfit_diLep,2));
+          Ep_Ptot_gamfit_diLep = sqrt(pow(Ep_px_gamfit_diLep,2) + pow(Ep_py_gamfit_diLep,2) + pow(Ep_pz_gamfit_diLep,2));
+          Em_Ptot_gamfit_diLep = sqrt(pow(Em_px_gamfit_diLep,2) + pow(Em_py_gamfit_diLep,2) + pow(Em_pz_gamfit_diLep,2));
+          
+          //For e+e-(pi0) fitting
+          TMatrixD covMatrixpi0(10,10);
+          
+          covMatrixpi0 = CorrectCLAS_V(covTrack,particles,p4pi0,vert,multi,is_mc,experiment);
+          Kstream pi0fit_diLep;
+          pi0fit_diLep.StringNames(particles);
+          pi0fit_diLep.FitInput(e_gamma,p4pi0,covMatrixpi0,m_targ);
+          pi0fit_diLep.Fit("pi0");
+          
+          
+          Pull_Chi_pi0fit_diLep = pi0fit_diLep.Chi2();
+          Pull_Prob_pi0fit_diLep = pi0fit_diLep.Prob();
+          
+          Eg_pi0fit_diLep = pi0fit_diLep.FitPhotonEnergy();
+          
+          for(int i = 0; i < 3; i++) p4pi0[i] = pi0fit_diLep.FitP4(i);
+          
+          P4pho_pi0fit_diLep.SetPxPyPzE(0.0,0.0,Eg_pi0fit_diLep,Eg_pi0fit_diLep);
+          P4pro_pi0fit_diLep = p4pi0[0];
+          P4ep_pi0fit_diLep = p4pi0[1];
+          P4em_pi0fit_diLep = p4pi0[2];
+          
+          TLorentzVector MM_PVec_pi0fit_diLep = (P4pho_pi0fit_diLep + P4target) - P4pro_pi0fit_diLep;
+          TLorentzVector MM_PEpEmVec_pi0fit_diLep = (P4pho_pi0fit_diLep + P4target) - (P4pro_pi0fit_diLep + P4ep_pi0fit_diLep + P4em_pi0fit_diLep);
+          TLorentzVector IV_EpEmVec_pi0fit_diLep = P4ep_pi0fit_diLep + P4em_pi0fit_diLep;
+          open_angle_pi0fit_diLep = P4ep_pi0fit_diLep.Vect().Angle(P4em_pi0fit_diLep.Vect());
+          IV_EpEm_pi0fit_diLep_P = sqrt(pow(IV_EpEmVec_pi0fit_diLep.Px(),2) + pow(IV_EpEmVec_pi0fit_diLep.Py(),2) + pow(IV_EpEmVec_pi0fit_diLep.Pz(),2));
+          
+          CM_Theta_pi0fit_diLep = OneBoostComparison(MM_PVec_pi0fit_diLep, (P4pho_pi0fit_diLep + P4target));
+          mandelstam_t_pi0fit_diLep = (P4target - P4pro_pi0fit_diLep).M2();
+          
+          
+          mE_PEpEm_pi0fit_diLep = MM_PEpEmVec_pi0fit_diLep.E();
+          mm2_PEpEm_pi0fit_diLep = MM_PEpEmVec_pi0fit_diLep.M2();
+          mm_PEpEm_pi0fit_diLep = MM_PEpEmVec_pi0fit_diLep.M();
+          
+          mm_P_pi0fit_diLep = MM_PVec_pi0fit_diLep.M();
+          mm2_P_pi0fit_diLep = MM_PVec_pi0fit_diLep.M2();
+          IV_EpEm_pi0fit_diLep = IV_EpEmVec_pi0fit_diLep.M();
+          
+          P_px_pi0fit_diLep = P4pro_pi0fit_diLep.Px();
+          P_py_pi0fit_diLep = P4pro_pi0fit_diLep.Py();
+          P_pz_pi0fit_diLep = P4pro_pi0fit_diLep.Pz();
+          P_Theta_pi0fit_diLep = P4pro_pi0fit_diLep.Theta()*180./TMath::Pi();
+          P_Phi_pi0fit_diLep = P4pro_pi0fit_diLep.Phi()*180./TMath::Pi();
+          
+          Ep_px_pi0fit_diLep = P4ep_pi0fit_diLep.Px();
+          Ep_py_pi0fit_diLep = P4ep_pi0fit_diLep.Py();
+          Ep_pz_pi0fit_diLep = P4ep_pi0fit_diLep.Pz();
+          Ep_Theta_pi0fit_diLep = P4ep_pi0fit_diLep.Theta()*180./TMath::Pi();
+          Ep_Phi_pi0fit_diLep = P4ep_pi0fit_diLep.Phi()*180./TMath::Pi();
+          
+          Em_px_pi0fit_diLep = P4em_pi0fit_diLep.Px();
+          Em_py_pi0fit_diLep = P4em_pi0fit_diLep.Py();
+          Em_pz_pi0fit_diLep = P4em_pi0fit_diLep.Pz();
+          Em_Theta_pi0fit_diLep = P4em_pi0fit_diLep.Theta()*180./TMath::Pi();
+          Em_Phi_pi0fit_diLep = P4em_pi0fit_diLep.Phi()*180./TMath::Pi();
+          
+          P_Ptot_pi0fit_diLep = sqrt(pow(P_px_pi0fit_diLep,2) + pow(P_py_pi0fit_diLep,2) + pow(P_pz_pi0fit_diLep,2));
+          Ep_Ptot_pi0fit_diLep = sqrt(pow(Ep_px_pi0fit_diLep,2) + pow(Ep_py_pi0fit_diLep,2) + pow(Ep_pz_pi0fit_diLep,2));
+          Em_Ptot_pi0fit_diLep = sqrt(pow(Em_px_pi0fit_diLep,2) + pow(Em_py_pi0fit_diLep,2) + pow(Em_pz_pi0fit_diLep,2));
+          
+          //For e+e-(0) fitting
+          TMatrixD covMatrixnothing(10,10);
+          
+          covMatrixnothing = CorrectCLAS_V(covTrack,particles,p4nothing,vert,multi,is_mc,experiment);
+          Kstream nothingfit_diLep;
+          nothingfit_diLep.StringNames(particles);
+          nothingfit_diLep.FitInput(e_gamma,p4nothing,covMatrixnothing,m_targ);
+          nothingfit_diLep.Fit();
+          
+          
+          Pull_Chi_nothingfit_diLep = nothingfit_diLep.Chi2();
+          Pull_Prob_nothingfit_diLep = nothingfit_diLep.Prob();
+          
+          Pull_Zero = nothingfit_diLep.GetPull(0);
+          Pull_One = nothingfit_diLep.GetPull(1);
+          Pull_Two = nothingfit_diLep.GetPull(2);
+          Pull_Three = nothingfit_diLep.GetPull(3);
+          Pull_Four = nothingfit_diLep.GetPull(4);
+          Pull_Five = nothingfit_diLep.GetPull(5);
+          Pull_Six = nothingfit_diLep.GetPull(6);
+          Pull_Seven = nothingfit_diLep.GetPull(7);
+          Pull_Eight = nothingfit_diLep.GetPull(8);
+          Pull_Nine = nothingfit_diLep.GetPull(9);
+          
+          Eg_nothingfit_diLep = nothingfit_diLep.FitPhotonEnergy();
+          
+          for(int i = 0; i < 3; i++) p4nothing[i] = nothingfit_diLep.FitP4(i);
+          
+          P4pho_nothingfit_diLep.SetPxPyPzE(0.0,0.0,Eg_nothingfit_diLep,Eg_nothingfit_diLep);
+          P4pro_nothingfit_diLep = p4nothing[0];
+          P4ep_nothingfit_diLep = p4nothing[1];
+          P4em_nothingfit_diLep = p4nothing[2];
+          
+          TLorentzVector MM_PVec_nothingfit_diLep = (P4pho_nothingfit_diLep + P4target) - P4pro_nothingfit_diLep;
+          TLorentzVector MM_PEpEmVec_nothingfit_diLep = (P4pho_nothingfit_diLep + P4target) - (P4pro_nothingfit_diLep + P4ep_nothingfit_diLep + P4em_nothingfit_diLep);
+          TLorentzVector IV_EpEmVec_nothingfit_diLep = P4ep_nothingfit_diLep + P4em_nothingfit_diLep;
+          open_angle_nothingfit_diLep = P4ep_nothingfit_diLep.Vect().Angle(P4em_nothingfit_diLep.Vect());
+          IV_EpEm_nothingfit_diLep_P = sqrt(pow(IV_EpEmVec_nothingfit_diLep.Px(),2) + pow(IV_EpEmVec_nothingfit_diLep.Py(),2) + pow(IV_EpEmVec_nothingfit_diLep.Pz(),2));
+          
+          CM_Theta_nothingfit_diLep = OneBoostComparison(MM_PVec_nothingfit_diLep, (P4pho_nothingfit_diLep + P4target));
+          mandelstam_t_nothingfit_diLep = (P4target - P4pro_nothingfit_diLep).M2();
+          
+          
+          mE_PEpEm_nothingfit_diLep = MM_PEpEmVec_nothingfit_diLep.E();
+          mm2_PEpEm_nothingfit_diLep = MM_PEpEmVec_nothingfit_diLep.M2();
+          mm_PEpEm_nothingfit_diLep = MM_PEpEmVec_nothingfit_diLep.M();
+          
+          mm_P_nothingfit_diLep = MM_PVec_nothingfit_diLep.M();
+          mm2_P_nothingfit_diLep = MM_PVec_nothingfit_diLep.M2();
+          IV_EpEm_nothingfit_diLep = IV_EpEmVec_nothingfit_diLep.M();
+          
+          P_px_nothingfit_diLep = P4pro_nothingfit_diLep.Px();
+          P_py_nothingfit_diLep = P4pro_nothingfit_diLep.Py();
+          P_pz_nothingfit_diLep = P4pro_nothingfit_diLep.Pz();
+          P_Theta_nothingfit_diLep = P4pro_nothingfit_diLep.Theta()*180./TMath::Pi();
+          P_Phi_nothingfit_diLep = P4pro_nothingfit_diLep.Phi()*180./TMath::Pi();
+          
+          Ep_px_nothingfit_diLep = P4ep_nothingfit_diLep.Px();
+          Ep_py_nothingfit_diLep = P4ep_nothingfit_diLep.Py();
+          Ep_pz_nothingfit_diLep = P4ep_nothingfit_diLep.Pz();
+          Ep_Theta_nothingfit_diLep = P4ep_nothingfit_diLep.Theta()*180./TMath::Pi();
+          Ep_Phi_nothingfit_diLep = P4ep_nothingfit_diLep.Phi()*180./TMath::Pi();
+          
+          Em_px_nothingfit_diLep = P4em_nothingfit_diLep.Px();
+          Em_py_nothingfit_diLep = P4em_nothingfit_diLep.Py();
+          Em_pz_nothingfit_diLep = P4em_nothingfit_diLep.Pz();
+          Em_Theta_nothingfit_diLep = P4em_nothingfit_diLep.Theta()*180./TMath::Pi();
+          Em_Phi_nothingfit_diLep = P4em_nothingfit_diLep.Phi()*180./TMath::Pi();
+          
+          P_Ptot_nothingfit_diLep = sqrt(pow(P_px_nothingfit_diLep,2) + pow(P_py_nothingfit_diLep,2) + pow(P_pz_nothingfit_diLep,2));
+          Ep_Ptot_nothingfit_diLep = sqrt(pow(Ep_px_nothingfit_diLep,2) + pow(Ep_py_nothingfit_diLep,2) + pow(Ep_pz_nothingfit_diLep,2));
+          Em_Ptot_nothingfit_diLep = sqrt(pow(Em_px_nothingfit_diLep,2) + pow(Em_py_nothingfit_diLep,2) + pow(Em_pz_nothingfit_diLep,2));
+          
+          
+          t4->Fill();
+        }//end of exclusive cut loop
       }
     }
   }
