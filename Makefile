@@ -147,9 +147,9 @@ LIBS          = $(ROOTLIBS) $(SYSLIBS)
 GLIBS         = $(ROOTGLIBS) ccylinder.o intersept.o targcell.o stcounter.o -lgfortran -L/usr/local/lib/ $(SYSLIBS)
 #------------------------------------------------------------------------------
 
-MAINO		= MergePlot_4Pion.$(ObjSuf)
-MAINS		= MergePlot_4Pion.$(SrcSuf)
-MAIN		= MergePlot_4Pion$(ExeSuf)
+MAINO		= MergePlot.$(ObjSuf)
+MAINS		= MergePlot.$(SrcSuf)
+MAIN		= MergePlot$(ExeSuf)
 PROGRAMS	= $(MAIN)
 
 #------------------------------------------------------------------------------
