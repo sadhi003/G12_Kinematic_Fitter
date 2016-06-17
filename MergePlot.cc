@@ -602,8 +602,8 @@ int main(){
           Ep_tofpass = clas::g12::pass_g12_TOFKO(pip_sec, pip_SC_paddle, 1);// TOF Knockout
           P_tofpass = clas::g12::pass_g12_TOFKO(prot_sec, prot_SC_paddle, 1);// TOF Knockout
           
-          Ep_geofid = clas::g12::g12_PosParticle_fiducial_cuts(Em_p, Em_Theta, Em_Phi,"nominal");//Geometric Fiducial Cut
-          Em_geofid = clas::g12::g12_NegParticle_fiducial_cuts(Ep_p, Ep_Theta, Ep_Phi,"nominal");//Geometric Fiducial Cut
+          Em_geofid = clas::g12::g12_PosParticle_fiducial_cuts(Em_p, Em_Theta, Em_Phi,"nominal");//Geometric Fiducial Cut
+          Ep_geofid = clas::g12::g12_NegParticle_fiducial_cuts(Ep_p, Ep_Theta, Ep_Phi,"nominal");//Geometric Fiducial Cut
           P_geofid = clas::g12::g12_PosParticle_fiducial_cuts(P_p, P_Theta, P_Phi,"nominal");//Geometric Fiducial Cut
           
           
@@ -625,7 +625,7 @@ int main(){
           
           P_sec = prot_sec;
           Ep_sec = pip_sec;
-          Em_sec = pip_sec;
+          Em_sec = pim_sec;
           
           
           P_dTOF = prot_dTOF;

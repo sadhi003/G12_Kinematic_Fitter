@@ -25,7 +25,7 @@
     FitFunc->SetMarkerSize(0.3);
     FitFunc->SetLineWidth(3);
   
-  c1->cd(1);chain1->Draw("Pull_One>>Pull_1(100,-5,5)","Pull_Prob_nothingfit_diLep>0.01");  
+  c1->cd(1);chain1->Draw("Pull_One>>Pull_1(100,-5,5)","Pull_Prob_nothingfit_diLep>0.01");
   c1->cd(2);chain1->Draw("Pull_Two>>Pull_2(100,-5,5)","Pull_Prob_nothingfit_diLep>0.01");
   c1->cd(3);chain1->Draw("Pull_Three>>Pull_3(100,-5,5)","Pull_Prob_nothingfit_diLep>0.01");
   c1->cd(4);chain1->Draw("Pull_Four>>Pull_4(100,-5,5)","Pull_Prob_nothingfit_diLep>0.01");
@@ -65,5 +65,5 @@
   c1->cd(11);Pull_0->Fit("FitFunc","R");
 //
 //  //c1->cd(12);Prob->Draw("");
-//  c1->Print("Wrong_Lep_Pulls_fix_03_11_2015.pdf");
+  c1->Print("Wrong_Lep_Pulls_fix_03_11_2015.pdf");
 }
