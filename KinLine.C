@@ -142,8 +142,8 @@ TMatrixD CorrectCLAS_V(const TMatrixD &__VTrack,
      if(__isMC) res_scale *= 1.4;
    }  
    if(__xid == "g12"){
-     res_scale = 2.83*0.8; //2.0
-     p_scale = 1.94*0.74;
+     p_scale = 1.5714;   //  p_scale (old) = 1.94
+     res_scale = 2.1791; // res_scale (old) = 2.83
 
      r_scale = 1.3;     
      cell = 7;
